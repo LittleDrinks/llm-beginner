@@ -27,7 +27,7 @@
 
 必做 5 项，缺一不算完成：
 
-- [ ] **M1** 手写 `scaled_dot_product_attention`，自检 `attention_correctness` 通过（与官方实现误差 < 1e-5）
+- [x] **M1** 手写 `scaled_dot_product_attention`，自检 `attention_correctness` 通过（与官方实现误差 < 1e-5）
 - [ ] **M2** 手写 `MultiHeadAttention` + `TransformerBlock`，前向不报错且形状对
 - [ ] **M3** 在 ChnSentiCorp 上训练分类器，dev 准确率 ≥ 0.80（参考基线 ~0.85）
 - [ ] **M4** 改一遍代码加 causal mask 跑 toy 语言模型，自检 `causal_mask` 通过（未来词元不泄漏）
