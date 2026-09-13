@@ -63,6 +63,17 @@ def test_causal_mask():
         "leaked_diff": leaked,
     }
 
+def test_mha_output_shape():
+    from src.attention import MultiHeadAttention
+    B, T, H, D = 2, 3, 2, 8
+    mha = MultiHeadAttention(D, H)
+    X = torch.randn(B, T, D)
+    O = mha(X)
+    same = O.shape == (B, T, D)
+    return {
+        "test": "mha_output_mask",
+        "pass": same
+    }
 
 def test_classifier_accuracy():
     """跑学生训练好的 checkpoint 在 ChnSentiCorp dev set 上的准确率。"""
@@ -109,4 +120,4 @@ def test_classifier_accuracy():
 
 if __name__ == "__main__":
     run_tests([test_attention_correctness, test_causal_mask,
-               test_classifier_accuracy], ROOT)
+               test_mha_output_shape, test_classifier_accuracy], ROOT)
