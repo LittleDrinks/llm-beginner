@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn.functional as F
 
-def scaled_dot_product_attention(Q: torch.tensor, K: torch.tensor, V: torch.tensor) -> torch.tensor:
+def scaled_dot_product_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: torch.Tensor|None=None) -> torch.tensor:
     """
     输入：
     Q: (B, H, T, D)
@@ -14,6 +14,11 @@ def scaled_dot_product_attention(Q: torch.tensor, K: torch.tensor, V: torch.tens
     输出：
     output: (B, H, T, D)
     """
-    (_, _, _, D) = Q.shape
-    return torch.softmax(Q @ K.transpose(-2, -1) / math.sqrt(D), dim=-1) @ V
-    
+    d_k = Q.shape[-1]
+    score = Q @ K.transpose(-2, -1) / math.sqrt(d_k)
+    if mask is not None:
+        assert(mask.dtype == torch.bool)
+        score = score.masked_fill(mask, float('-inf'))
+    attention = torch.softmax(score, dim=-1)
+    return attention @ V
+
