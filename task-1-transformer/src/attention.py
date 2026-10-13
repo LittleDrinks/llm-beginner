@@ -3,7 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def scaled_dot_product_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: torch.Tensor|None=None) -> torch.tensor:
+
+def scaled_dot_product_attention(
+    Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: torch.Tensor | None = None
+) -> torch.tensor:
     """
     输入：
     Q: (B, H, T, D)
@@ -18,10 +21,11 @@ def scaled_dot_product_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tens
     d_k = Q.shape[-1]
     score = Q @ K.transpose(-2, -1) / math.sqrt(d_k)
     if mask is not None:
-        assert(mask.dtype == torch.bool)
-        score = score.masked_fill(mask, float('-inf'))
+        assert mask.dtype == torch.bool
+        score = score.masked_fill(mask, float("-inf"))
     attention = torch.softmax(score, dim=-1)
     return attention @ V
+
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model: int, num_heads: int) -> None:
@@ -36,7 +40,9 @@ class MultiHeadAttention(nn.Module):
         self.W_V = nn.Linear(d_model, d_model)
         self.W_O = nn.Linear(d_model, d_model)
 
-    def forward(self, X: torch.Tensor, mask: torch.Tensor|None = None) -> torch.Tensor:
+    def forward(
+        self, X: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> torch.Tensor:
         """
         输入：
         X: (B, T, D) 若干句句子

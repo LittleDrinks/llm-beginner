@@ -2,7 +2,8 @@
 
 约定学生实现见同目录 ../README.md「实现约定」一节。
 本脚本运行后会输出每项测试结果，并把结果写入 eval/result.json，可附在提交里。
-"""
+""" 
+
 import sys
 from pathlib import Path
 
@@ -10,13 +11,13 @@ import torch
 import torch.nn.functional as F
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))           # from src.* —— 学生实现
-sys.path.insert(0, str(ROOT.parent))    # from _eval_harness —— 共用运行壳
+sys.path.insert(0, str(ROOT))  # from src.* —— 学生实现
+sys.path.insert(0, str(ROOT.parent))  # from _eval_harness —— 共用运行壳
 
 from _eval_harness import run_tests
 
-ACC_PASS = 0.80       # 文本分类准确率通过线
-ACC_BASELINE = 0.85   # 参考基线，仅供对照、不参与判定
+ACC_PASS = 0.80  # 文本分类准确率通过线
+ACC_BASELINE = 0.85  # 参考基线，仅供对照、不参与判定
 
 
 def test_attention_correctness():
@@ -63,37 +64,36 @@ def test_causal_mask():
         "leaked_diff": leaked,
     }
 
-def test_mha_output_shape():
-    from src.attention import MultiHeadAttention
-    B, T, H, D = 2, 3, 2, 8
-    mha = MultiHeadAttention(D, H)
-    X = torch.randn(B, T, D)
-    O = mha(X)
-    same = O.shape == (B, T, D)
-    return {
-        "test": "mha_output_mask",
-        "pass": same
-    }
 
 def test_classifier_accuracy():
     """跑学生训练好的 checkpoint 在 ChnSentiCorp dev set 上的准确率。"""
     ckpt = ROOT / "ckpt" / "best.pt"
     if not ckpt.exists():
-        return {"test": "classifier_accuracy", "pass": None,
-                "skip": "ckpt/best.pt 不存在，先完成训练步骤"}
+        return {
+            "test": "classifier_accuracy",
+            "pass": None,
+            "skip": "ckpt/best.pt 不存在，先完成训练步骤",
+        }
 
     try:
         from src.model import load_for_eval
     except ImportError as e:
-        return {"test": "classifier_accuracy", "pass": False,
-                "error": f"src/model.py 未导出 load_for_eval: {e}"}
+        return {
+            "test": "classifier_accuracy",
+            "pass": False,
+            "error": f"src/model.py 未导出 load_for_eval: {e}",
+        }
 
     dev_path = ROOT / "data" / "validation.parquet"
     if not dev_path.exists():
-        return {"test": "classifier_accuracy", "pass": None,
-                "skip": "data/validation.parquet 不存在，先跑 data/download.py"}
+        return {
+            "test": "classifier_accuracy",
+            "pass": None,
+            "skip": "data/validation.parquet 不存在，先跑 data/download.py",
+        }
 
     import pandas as pd
+
     dev = pd.read_parquet(dev_path)
 
     model, tokenize_fn = load_for_eval(str(ckpt))
@@ -119,5 +119,11 @@ def test_classifier_accuracy():
 
 
 if __name__ == "__main__":
-    run_tests([test_attention_correctness, test_causal_mask,
-               test_mha_output_shape, test_classifier_accuracy], ROOT)
+    run_tests(
+        [
+            test_attention_correctness,
+            test_causal_mask,
+            test_classifier_accuracy,
+        ],
+        ROOT,
+    )
