@@ -28,8 +28,8 @@
 必做 5 项，缺一不算完成：
 
 - [x] **M1** 手写 `scaled_dot_product_attention`，自检 `attention_correctness` 通过（与官方实现误差 < 1e-5）
-- [ ] **M2** 手写 `MultiHeadAttention` + `TransformerBlock`，前向不报错且形状对
-- [ ] **M3** 在 ChnSentiCorp 上训练分类器，dev 准确率 ≥ 0.80（参考基线 ~0.85）
+- [x] **M2** 手写 `MultiHeadAttention` + `TransformerBlock`，前向不报错且形状对
+- [x] **M3** 在 ChnSentiCorp 上训练分类器，dev 准确率 ≥ 0.80（参考基线 ~0.85）
 - [ ] **M4** 改一遍代码加 causal mask 跑 toy 语言模型，自检 `causal_mask` 通过（未来词元不泄漏）
 - [ ] **M5** 输出 ≥ 3 张注意力热图（建议：1 正面样本、1 负面样本、1 长句样本）
 
@@ -40,7 +40,7 @@
 - [ ] **S3** dev 准确率 > 0.88（强结果）
 - [ ] **S4** 把绝对 PE 换成 RoPE 对比
 
-## 实施步骤（建议节奏：2 周）
+## 实施步骤（建sua议节奏：2 周）
 
 ### 第 1-3 天：环境 + 数据
 
