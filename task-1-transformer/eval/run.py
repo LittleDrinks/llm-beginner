@@ -2,7 +2,7 @@
 
 约定学生实现见同目录 ../README.md「实现约定」一节。
 本脚本运行后会输出每项测试结果，并把结果写入 eval/result.json，可附在提交里。
-""" 
+"""
 
 import sys
 from pathlib import Path

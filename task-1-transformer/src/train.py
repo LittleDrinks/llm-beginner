@@ -3,7 +3,7 @@ import torch.nn as nn
 from tqdm import tqdm
 from src.model import TransformerClassifier
 from pathlib import Path
-from torch.utils.data import TensorDataset, DataLoader, random_split
+from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
 import json
 
@@ -66,7 +66,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
 
-    epochs = 5
+    epochs = 7
     CKPT_DIR.mkdir(parents=True, exist_ok=True)
     metadata = {
         "model_config": model_config,

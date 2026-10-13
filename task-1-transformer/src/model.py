@@ -4,7 +4,8 @@ from src.block import TransformerBlock
 import json
 from pathlib import Path
 
-class TransformerClassifier(nn.Module):
+
+class TransformerBackbone(nn.Module):
     def __init__(
         self,
         vocab_size: int,
@@ -12,7 +13,6 @@ class TransformerClassifier(nn.Module):
         num_heads: int,
         num_layers: int,
         pad_id: int = 0,
-        num_classes: int = 2,
         max_len: int = 512,
     ):
         super().__init__()
@@ -21,7 +21,6 @@ class TransformerClassifier(nn.Module):
         self.num_heads = num_heads
         self.num_layers = num_layers
         self.pad_id = pad_id
-        self.num_classes = num_classes
 
         # 1. token embedding
         self.token_embedding = nn.Embedding(vocab_size, d_model, padding_idx=pad_id)
@@ -42,11 +41,11 @@ class TransformerClassifier(nn.Module):
         pe[:, 1::2] = torch.cos(angles[:, : d_model // 2])  # 支持 d_model 是奇数的情况
         self.register_buffer("position_encoding", pe.unsqueeze(0))
 
-        # 4. 分类头
-        self.classifier = nn.Linear(d_model, num_classes)
-
-    def forward(self, ids: torch.Tensor) -> torch.Tensor:
-        # ids: (B, T)
+    def forward(
+        self, ids: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        # 输入：ids (B, T), 可选 mask (B, 1, 1, T) 或 (T, T)
+        # 输出：(B, T, d_model)
         B, T = ids.shape
 
         if T > self.position_encoding.shape[1]:
@@ -70,7 +69,8 @@ class TransformerClassifier(nn.Module):
         # 你         s20   s21   s22   -inf
         # <pad>      s30   s31   s32   -inf
         # ====================================
-        mask = (ids == self.pad_id).unsqueeze(1).unsqueeze(2)
+        if mask is None:
+            mask = (ids == self.pad_id).unsqueeze(1).unsqueeze(2)
 
         # embedding: (B, T) -> (B, T, d_model)
         x = self.token_embedding(ids)
@@ -82,6 +82,33 @@ class TransformerClassifier(nn.Module):
         for block in self.blocks:
             x = block(x, mask=mask)
 
+        return x
+
+
+class TransformerClassifier(nn.Module):
+    def __init__(
+        self,
+        vocab_size: int,
+        d_model: int,
+        num_heads: int,
+        num_layers: int,
+        pad_id: int = 0,
+        num_classes: int = 2,
+        max_len: int = 512,
+    ):
+        super().__init__()
+        self.pad_id = pad_id
+        self.backbone = TransformerBackbone(
+            vocab_size, d_model, num_heads, num_layers, pad_id, max_len
+        )
+        self.classifier = nn.Linear(d_model, num_classes)
+
+    def forward(self, ids: torch.Tensor) -> torch.Tensor:
+        # 内部构造 padding_mask 传给 backbone
+        # 对 backbone 输出做 masked mean pooling
+        # 返回分类 logits: (B, num_classes)
+        x = self.backbone(ids)  # (B, T, D)
+
         # masked mean polling: (B, T, D) -> (B, D)
         # 相当于把每个 token 的词向量平均一下, 得到一个新的词向量表达这句话的语义
         # 先把 <pad> 那些位置的词向量置 0, 然后直接加起来, 除以正确的数量即可
@@ -89,9 +116,7 @@ class TransformerClassifier(nn.Module):
         count = valid.sum(dim=1)
         x = (x * valid).sum(dim=1) / count
 
-        # classify
-        logits = self.classifier(x)
-        return logits
+        return self.classifier(x)
 
 
 def load_for_eval(ckpt_path: str):
@@ -100,7 +125,9 @@ def load_for_eval(ckpt_path: str):
     model.eval()
     """
     ckpt_path = Path(ckpt_path)
-    metadata = json.loads((ckpt_path.parent / "metadata.json").read_text(encoding="utf-8"))
+    metadata = json.loads(
+        (ckpt_path.parent / "metadata.json").read_text(encoding="utf-8")
+    )
     config = metadata["model_config"]
     vocab = metadata["vocab"]
     model = TransformerClassifier(**config)
