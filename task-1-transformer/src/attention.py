@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 def scaled_dot_product_attention(
-    Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: torch.Tensor | None = None
+    Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: torch.Tensor | None = None, need_weight: bool = False
 ) -> torch.tensor:
     """
     输入：
@@ -24,11 +24,10 @@ def scaled_dot_product_attention(
         assert mask.dtype == torch.bool
         score = score.masked_fill(mask, float("-inf"))
     attention = torch.softmax(score, dim=-1)
-    return attention @ V
-
+    return attention @ V, attention
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, d_model: int, num_heads: int) -> None:
+    def __init__(self, d_model: int, num_heads: int, need_weight: bool = False) -> None:
         if d_model % num_heads != 0:
             raise ValueError("Invalid head num!")
         super().__init__()
@@ -39,6 +38,7 @@ class MultiHeadAttention(nn.Module):
         self.W_K = nn.Linear(d_model, d_model)
         self.W_V = nn.Linear(d_model, d_model)
         self.W_O = nn.Linear(d_model, d_model)
+        self.attn_weight = None  # 记录本次计算的注意力权重，用于实验分析
 
     def forward(
         self, X: torch.Tensor, mask: torch.Tensor | None = None
@@ -62,7 +62,7 @@ class MultiHeadAttention(nn.Module):
         Q = self.W_Q(X).reshape(B, T, self.num_heads, self.d_k).transpose(1, 2)
         K = self.W_K(X).reshape(B, T, self.num_heads, self.d_k).transpose(1, 2)
         V = self.W_V(X).reshape(B, T, self.num_heads, self.d_k).transpose(1, 2)
-        O = scaled_dot_product_attention(Q, K, V, mask)
+        O, self.attn_weight = scaled_dot_product_attention(Q, K, V, mask)
         O = O.transpose(1, 2).reshape(B, T, self.d_model)
         O = self.W_O(O)
         return O
