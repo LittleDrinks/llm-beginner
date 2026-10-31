@@ -10,6 +10,8 @@ __pycache__/
 # 虚拟环境
 .venv/
 venv/
+.vscode/
 
 # Claude Code 工具产物（agent worktree、session 等，勿入公开仓库）
 .claude/
+.agents/
