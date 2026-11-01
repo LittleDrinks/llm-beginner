@@ -1,6 +1,4 @@
-data/cache/
-data/*.parquet
-data/*.jsonl
+data/
 ckpt/
 models/
 src/__pycache__/
