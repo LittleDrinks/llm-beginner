@@ -15,3 +15,7 @@ venv/
 # Claude Code 工具产物（agent worktree、session 等，勿入公开仓库）
 .claude/
 .agents/
+AGENTS.md
+
+# 参考资料
+references/
